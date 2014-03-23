@@ -82,7 +82,7 @@ module.exports = (grunt) ->
         newlines_after_classes: level: 'error'
         no_empty_param_list: level: 'error'
         no_unnecessary_fat_arrows: level: 'ignore'
-        globals: [ '$', 'console', 'Backbone' ]
+        globals: [ '$', 'console', 'Backbone', '_', 'window', "App" ]
       all:
         files: [{ expand: yes, cwd: 'assets/', src: [ '**/*.coffee' ] }]
 
@@ -129,7 +129,8 @@ module.exports = (grunt) ->
 
     watch:
       options:
-        livereload: yes
+        livereload:
+          port: 1218
         interrupt: yes
       imgbuild:
         files: ['assets/**/*.{jpg,png,gif}']
@@ -147,7 +148,7 @@ module.exports = (grunt) ->
     connect:
       server:
         options:
-          port: 3000
+          port: 3030
           middleware: (connect, options) ->
             mw = [connect.logger 'dev']
             mw.push (req, res) ->
