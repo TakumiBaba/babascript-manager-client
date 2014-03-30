@@ -82,7 +82,7 @@ module.exports = (grunt) ->
         newlines_after_classes: level: 'error'
         no_empty_param_list: level: 'error'
         no_unnecessary_fat_arrows: level: 'ignore'
-        globals: [ '$', 'console', 'Backbone', '_', 'window', "App" ]
+        globals: ['Linda', 'io', 'document', 'moment', '$', 'console', 'Backbone', '_', 'window', "App" ]
       all:
         files: [{ expand: yes, cwd: 'assets/', src: [ '**/*.coffee' ] }]
 
