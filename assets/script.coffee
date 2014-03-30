@@ -1,4 +1,5 @@
-API = "http://localhost:3000/api"
+# API = "http://localhost:3000/api"
+API = "http://api.manager.localhost/api"
 
 class Application extends Backbone.Router
 
@@ -16,20 +17,21 @@ class Application extends Backbone.Router
   initialize: ->
     $.ajax
       type: "GET"
-      url: "#{API}/session/isLogin"
+      xhrFields:
+        withCredentials: true
+      url: "#{API}/session"
     .done (data)=>
       console.log data
-      console.log window.location.pathname
-      # @header = new HeaderView()
       @groups = new Groups()
       @user = new User()
       @mainView = new MainView()
       @sidebar = new Sidebar()
-      if data is false
+      if data.status is false
         Backbone.history.start
           pushState: yes
         @navigate "/login", yes
       else
+        @account ?= new Account()
         console.log data
         Backbone.history.start
           pushState: yes
@@ -38,7 +40,7 @@ class Application extends Backbone.Router
         #   @navigate "/login", yes
         # else
         console.log "login success"
-        @linda.io.once "connect", =>
+        # @linda.io.once "connect", =>
           
       # @linda.io.once "connect", =>
       #   Backbone.history.start
@@ -57,7 +59,8 @@ class Application extends Backbone.Router
       #   if href
       #     App.navigate href, yes
 
-
+  index: ->
+    @mainView.indexView.render()
 
   me: ->
     console.log "user view"
@@ -109,6 +112,7 @@ class SessionModel extends Backbone.Model
     
 
 # ======== Collection =======
+
 class Users extends Backbone.Collection
   model: User
   # sync: ->
@@ -142,7 +146,6 @@ class Sidebar extends Backbone.View
   el: "#sidebar"
 
   initialize: (@user)->
-    # @listenTo @user, "change", @change
     @listenTo App.user, "change", @change
     @groupList = $(".group-list")
     @groupCreateModal = new GroupCreateModalView()
@@ -160,8 +163,8 @@ class Sidebar extends Backbone.View
 class HeaderView extends Backbone.View
   el: "#header-view"
 
-  initialize: (@user)->
-    @listenTo @user, "change", @change
+  initialize: ->
+    @listenTo App.user, "change", @change
     @groupList = $(".groups")
 
   append: (user)->
@@ -191,11 +194,10 @@ class GroupElement extends Backbone.View
 class MainView extends Backbone.View
   el: "#main-view"
 
-  initialize: (@user)->
-    @groupViews = {}
+  initialize: ->
     @userView = new UserView()
-    @listenTo App.groups, "add", @createGroupView
-    @listenTo App.groups, "remove", @removeGroupView
+    # @indexView = new IndexView()
+    @loginView = new LoginView()
       
   createGroupView: (model)=>
     view = new GroupView(model)
@@ -239,8 +241,10 @@ class LoginView extends Backbone.View
     pass = $(@.el).find(".form-pass").val()
     console.log id, pass
     $.ajax
-      url: "#{App.api}/session"
+      url: "#{API}/session"
       type: "POST"
+      xhrFields:
+        withCredentials: true
       data:
         username: id
         password: pass
@@ -248,9 +252,10 @@ class LoginView extends Backbone.View
     .done (data)=>
       console.log data
       if data.status is true
+        window.document.cookie = data.sessionID
         id = data.user.id
         App.user.id = id
-        App.groups.url = "/api//users/#{id}/group"
+        App.groups.url = "/api/users/#{id}/group"
         App.user.fetch()
         App.groups.fetch()
         App.navigate "/", true
@@ -264,8 +269,10 @@ class LoginView extends Backbone.View
     id = $(@.el).find(".login-id").val()
     pass = $(@.el).find(".login-pass").val()
     $.ajax
-      url: "#{App.api}/signup"
+      url: "#{API}/signup"
       type: "POST"
+      xhrFields:
+        withCredentials: true
       data:
         id: id
         pass: pass
@@ -285,12 +292,12 @@ class UserView extends Backbone.View
 
   change: (model)->
     $(@.el).html _.template($("#user-view").html())
-    App.taskTupleSpace = App.linda.tuplespace("active_task")
-    App.taskTupleSpace.watch {group: App.user.get("id")}, (err, tuple)=>
-      d = tuple.data
-      v = ""
-      p = new GroupTask tuple
-      $(@.el).find(".task-list").prepend p.el
+    # App.taskTupleSpace = App.linda.tuplespace("active_task")
+    # App.taskTupleSpace.watch {group: App.user.get("id")}, (err, tuple)=>
+    #   d = tuple.data
+    #   v = ""
+    #   p = new GroupTask tuple
+    #   $(@.el).find(".task-list").prepend p.el
 
   render: ->
     $("#main-view").html @.el
@@ -326,10 +333,10 @@ class GroupView extends Backbone.View
     # @listenTo @programs, "remove", @program.remove
     # @programs.fetch()
 
-    @activeTask = App.linda.tuplespace("active_task")
-    @activeTask.watch {group: name}, @checkActiveTask
+    # @activeTask = App.linda.tuplespace("active_task")
+    # @activeTask.watch {group: name}, @checkActiveTask
 
-    @activeUser = App.linda.tuplespace("active_user")
+    # @activeUser = App.linda.tuplespace("active_user")
 
   program:
     add: (model)->
