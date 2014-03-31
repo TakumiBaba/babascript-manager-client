@@ -13,16 +13,16 @@ html
     .container-fluid
       .row
         #sidebar.sidebar.col-sm-3.col-md-2
-          div.user-box
-            a(href="/"): h3.text-center.page-header
-          //- div.search-box
-          //-   h4: small Search
-          //-   input.form-control(type="text", placeholder="group or personal name")
-          div.group-box
-            h4.text-center.page-header グループリスト
-            ul.nav.group-list
-            ul.nav
-              li: a(data-toggle="modal", data-target="#group-create").create-group-button.text-center: span.glyphicon.glyphicon-plus.text-center
+          //- div.user-box
+          //-   a(href="/"): h3.text-center.page-header
+          //- //- div.search-box
+          //- //-   h4: small Search
+          //- //-   input.form-control(type="text", placeholder="group or personal name")
+          //- div.group-box
+          //-   h4.text-center.page-header グループリスト
+          //-   ul.nav.group-list
+          //-   ul.nav
+          //-     li: a(data-toggle="modal", data-target="#group-create").create-group-button.text-center: span.glyphicon.glyphicon-plus.text-center
         #main-view.col-sm-9.col-md-10
     #group-create.modal.fade(tabindex='-1', role='dialog', aria-hidden='true')
       .modal-dialog
@@ -51,6 +51,19 @@ html
   //-       | hogefuga
   //-     .panel-body
   //-       | いえーい
+  script#sidebar-view(type="text/template")
+    div.user-box
+      a(href="/"): h3.text-center.page-header
+    //- div.search-box
+    //-   h4: small Search
+    //-   input.form-control(type="text", placeholder="group or personal name")
+    div.group-box
+      h4.text-center.page-header グループリスト
+      ul.nav.group-list
+      ul.nav
+        li: a(data-toggle="modal", data-target="#group-create").create-group-button.text-center: span.glyphicon.glyphicon-plus.text-center
+  script#index-view(type="text/template")
+
   script#user-view(type="text/template")
     h3.page-header タスクログ
     .task-list
@@ -130,7 +143,7 @@ html
             button.close(type="button", data-dismiss="modal", aria-hidden="true") x
             h2.text-center Login
           .modal-body
-            form.form.center-block
+            form.form.center-block(action="/api/session/login", method="POST")
               .form-group
                 input.form-id.form-control.input-lg(type="text", placeholder="id")
               .form-group

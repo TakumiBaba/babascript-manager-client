@@ -1,4 +1,3 @@
-# API = "http://localhost:3000/api"
 API = "http://api.manager.localhost/api"
 
 class Application extends Backbone.Router
@@ -22,24 +21,22 @@ class Application extends Backbone.Router
       url: "#{API}/session"
     .done (data)=>
       console.log data
-      @groups = new Groups()
-      @user = new User()
-      @mainView = new MainView()
-      @sidebar = new Sidebar()
-      if data.status is false
-        Backbone.history.start
-          pushState: yes
-        @navigate "/login", yes
+      Backbone.history.start
+        pushState: yes
+      if data.status
+        @account ?= new Account
+          username: data.user.id
+        @groups = new Groups()
+        @user = new User()
+        @mainView = new MainView()
+        @sidebar = new Sidebar()
       else
-        @account ?= new Account()
-        console.log data
-        Backbone.history.start
-          pushState: yes
+        @navigate "/login", yes
+      
         # if !data.status
         #   console.log "login failure"
         #   @navigate "/login", yes
         # else
-        console.log "login success"
         # @linda.io.once "connect", =>
           
       # @linda.io.once "connect", =>
@@ -72,7 +69,8 @@ class Application extends Backbone.Router
     @mainView.group name
 
   login: (id, pass)->
-    @mainView.login()
+    if @account.isLogin
+      @mainView.login()
 
 # ======== Models =======
 class Account extends Backbone.Model
@@ -149,6 +147,11 @@ class Sidebar extends Backbone.View
     @listenTo App.user, "change", @change
     @groupList = $(".group-list")
     @groupCreateModal = new GroupCreateModalView()
+    @render()
+
+  render: ->
+    html = _.template($("#sidebar-view").html())()
+    $(@.el).html html
 
   appendGroupToList: (model)->
     group = new GroupElement model
@@ -195,9 +198,9 @@ class MainView extends Backbone.View
   el: "#main-view"
 
   initialize: ->
-    @userView = new UserView()
+    # @userView = new UserView()
     # @indexView = new IndexView()
-    @loginView = new LoginView()
+    # @loginView = new LoginView()
       
   createGroupView: (model)=>
     view = new GroupView(model)
@@ -236,32 +239,32 @@ class LoginView extends Backbone.View
     $("#login-modal").modal()
 
   login: (e)->
-    e.preventDefault()
-    id = $(@.el).find(".form-id").val()
-    pass = $(@.el).find(".form-pass").val()
-    console.log id, pass
-    $.ajax
-      url: "#{API}/session"
-      type: "POST"
-      xhrFields:
-        withCredentials: true
-      data:
-        username: id
-        password: pass
-      dataType: "json"
-    .done (data)=>
-      console.log data
-      if data.status is true
-        window.document.cookie = data.sessionID
-        id = data.user.id
-        App.user.id = id
-        App.groups.url = "/api/users/#{id}/group"
-        App.user.fetch()
-        App.groups.fetch()
-        App.navigate "/", true
-        $("#login-modal").modal('hide')
-      else
-        window.alert "IDかパスワードが間違ってます"
+    # e.preventDefault()
+    # id = $(@.el).find(".form-id").val()
+    # pass = $(@.el).find(".form-pass").val()
+    # console.log id, pass
+    # $.ajax
+    #   url: "#{API}/session"
+    #   type: "POST"
+    #   xhrFields:
+    #     withCredentials: true
+    #   data:
+    #     username: id
+    #     password: pass
+    #   dataType: "json"
+    # .done (data)=>
+    #   console.log data
+    #   if data.status is true
+    #     window.document.cookie = data.sessionID
+    #     id = data.user.id
+    #     App.user.id = id
+    #     App.groups.url = "/api/users/#{id}/group"
+    #     App.user.fetch()
+    #     App.groups.fetch()
+    #     App.navigate "/", true
+    #     $("#login-modal").modal('hide')
+    #   else
+    #     window.alert "IDかパスワードが間違ってます"
 
 
   signup: (e)->
