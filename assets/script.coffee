@@ -21,16 +21,18 @@ class Application extends Backbone.Router
       url: "#{API}/session"
     .done (data)=>
       console.log data
-      Backbone.history.start
-        pushState: yes
+      @account = new Account()
+      @mainView = new MainView()
       if data.status
-        @account ?= new Account
-          username: data.user.id
-        @groups = new Groups()
-        @user = new User()
-        @mainView = new MainView()
-        @sidebar = new Sidebar()
+        @account.set "isLogin", true
+        @account.set "username", data.user.id
+        @group = new Groups
+          id: data.user.id
+        Backbone.history.start
+          pushState: yes
       else
+        Backbone.history.start
+          pushState: yes
         @navigate "/login", yes
       
         # if !data.status
@@ -57,23 +59,29 @@ class Application extends Backbone.Router
       #     App.navigate href, yes
 
   index: ->
-    @mainView.indexView.render()
+    @mainView.info()
 
   me: ->
-    console.log "user view"
-    @mainView.userView.render()
-
-  createGroup: ->
+    console.log @account
+    if !@account.get "isLogin"
+      @mainView.login()
+    else
+      @mainView.contentView.user()
 
   group: (name, type)->
-    @mainView.group name
+    @mainView.contentView.group()
 
   login: (id, pass)->
-    if @account.isLogin
+    if @account.get "isLogin"
       @mainView.login()
+    else
+      @navigate "/", yes
 
 # ======== Models =======
 class Account extends Backbone.Model
+
+  default:
+    isLogin: false
 
 class User extends Backbone.Model
   urlRoot: "#{API}/user"
@@ -143,8 +151,8 @@ class Programs extends Backbone.Collection
 class Sidebar extends Backbone.View
   el: "#sidebar"
 
-  initialize: (@user)->
-    @listenTo App.user, "change", @change
+  initialize: ->
+    # @listenTo App.user, "change", @change
     @groupList = $(".group-list")
     @groupCreateModal = new GroupCreateModalView()
     @render()
@@ -162,6 +170,12 @@ class Sidebar extends Backbone.View
     @groupList.empty()
     for g in model.get "groups"
       @appendGroupToList g
+
+  show: ->
+    $(@el).show()
+
+  hide: ->
+    $(@el).hide()
 
 class HeaderView extends Backbone.View
   el: "#header-view"
@@ -198,9 +212,15 @@ class MainView extends Backbone.View
   el: "#main-view"
 
   initialize: ->
-    # @userView = new UserView()
-    # @indexView = new IndexView()
-    # @loginView = new LoginView()
+    @sidebar = new Sidebar()
+    @sidebar.hide()
+
+    @contentView = new ContentView()
+    @contentView.hide()
+
+  content: ->
+    @sidebar.show()
+    @contentView.show()
       
   createGroupView: (model)=>
     view = new GroupView(model)
@@ -219,13 +239,28 @@ class MainView extends Backbone.View
     $(@.el).empty
     $(@.el).html @groupViews[name].el
 
-  user: ->
-    @userView.render()
-
   login: ->
     $(@.el).empty()
     loginView = new LoginView()
     loginView.render()
+
+  info: ->
+    console.log "info"
+
+class ContentView extends Backbone.View
+  el: "#content-view"
+
+  initialize: ->
+    console.log "content-view"
+
+  user: ->
+    @userView ?= new UserView()
+    @userView.render()
+  group: ->
+
+  show: $(@el).show
+  hide: $(@el).hide
+
 
 class LoginView extends Backbone.View
 
@@ -239,32 +274,32 @@ class LoginView extends Backbone.View
     $("#login-modal").modal()
 
   login: (e)->
-    # e.preventDefault()
-    # id = $(@.el).find(".form-id").val()
-    # pass = $(@.el).find(".form-pass").val()
-    # console.log id, pass
-    # $.ajax
-    #   url: "#{API}/session"
-    #   type: "POST"
-    #   xhrFields:
-    #     withCredentials: true
-    #   data:
-    #     username: id
-    #     password: pass
-    #   dataType: "json"
-    # .done (data)=>
-    #   console.log data
-    #   if data.status is true
-    #     window.document.cookie = data.sessionID
-    #     id = data.user.id
-    #     App.user.id = id
-    #     App.groups.url = "/api/users/#{id}/group"
-    #     App.user.fetch()
-    #     App.groups.fetch()
-    #     App.navigate "/", true
-    #     $("#login-modal").modal('hide')
-    #   else
-    #     window.alert "IDかパスワードが間違ってます"
+    e.preventDefault()
+    id = $(@.el).find(".form-id").val()
+    pass = $(@.el).find(".form-pass").val()
+    console.log id, pass
+    $.ajax
+      url: "#{API}/session"
+      type: "POST"
+      xhrFields:
+        withCredentials: true
+      data:
+        username: id
+        password: pass
+      dataType: "json"
+    .done (data)=>
+      console.log data
+      if data.status is true
+        window.document.cookie = data.sessionID
+        id = data.user.id
+        App.user.id = id
+        App.groups.url = "/api/users/#{id}/group"
+        App.user.fetch()
+        App.groups.fetch()
+        App.navigate "/", true
+        $("#login-modal").modal('hide')
+      else
+        window.alert "IDかパスワードが間違ってます"
 
 
   signup: (e)->
@@ -303,7 +338,7 @@ class UserView extends Backbone.View
     #   $(@.el).find(".task-list").prepend p.el
 
   render: ->
-    $("#main-view").html @.el
+    $("#content-view").html @.el
 
   show: ->
     $(@.el).show()

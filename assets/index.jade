@@ -11,7 +11,7 @@ html
       .navbar-header(style="margin:0; float:none;")
         a.center-block.text-center.navbar-brand(href="/") BabaScript Manager
     .container-fluid
-      .row
+      .row#main-view
         #sidebar.sidebar.col-sm-3.col-md-2
           //- div.user-box
           //-   a(href="/"): h3.text-center.page-header
@@ -23,7 +23,7 @@ html
           //-   ul.nav.group-list
           //-   ul.nav
           //-     li: a(data-toggle="modal", data-target="#group-create").create-group-button.text-center: span.glyphicon.glyphicon-plus.text-center
-        #main-view.col-sm-9.col-md-10
+        #content-view.col-sm-9.col-md-10
     #group-create.modal.fade(tabindex='-1', role='dialog', aria-hidden='true')
       .modal-dialog
         .modal-content
